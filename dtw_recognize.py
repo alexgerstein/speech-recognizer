@@ -26,15 +26,79 @@ score for the recognition.
 """
 
 import argparse
+import glob
+from scipy.spatial import distance
 
 
-def train_data(folder):
-    return
+MFC_TAG = ".mfc"
+WAV_TAG = ".wav"
+KNN = 3
 
+class dtw:
+    def __init__(self, train_folder, test_folder):
+        self.train_set = self._vectorize_data(train_folder)
+        self.test_set = self._vectorize_data(test_folder)
 
-def test_data(folder):
-    return 0
+    def train_data(self):
+        data_labels = {}
+        for test_key in self.test_set.keys():
+            label = test_key.split('-')[1][0]
+            print test_key, label
+            distances = []
+            
+            for train_key in self.train_set.keys():
+                dtw = self._dtw(self.test_set[test_key], self.train_set[train_key])
+                distances.append( (train_key, dtw) )
 
+            distances = sorted(distances, key=lambda x: x[1])
+            labels, _ = zip(*distances[:KNN]) 
+            majority = max(map(lambda x: x.split('-')[1][0], labels))
+            data_labels[test_key] = majority
+            print "--> vote:", majority
+        
+        return data_labels
+
+    def test_data(self, learned_labels):
+        keySet = learned_labels.keys()
+        count = 0
+        for key in keySet:
+            count += (learned_labels[key] == key.split('-')[1][0])
+        return 1.0 * count / len(keySet)
+
+    def _vectorize_data(self, folder):
+        data_set = {}
+        for mfc_file in glob.glob(folder + "/*" + MFC_TAG):
+            label = mfc_file.split('-')[1][0]
+            with open(mfc_file, 'r') as mf:
+                data_set[mfc_file] = []
+                for line in mf:
+                    line = map(lambda x: float(x), line.split())
+                    data_set[mfc_file].append(line)
+        return data_set
+
+    def _dtw(self, featTest, featTrain):
+        '''
+        Dynamic Time Warping (DTW): edit distance between speech feature vectors
+        '''
+        m = len(featTest);     # rows in distance matrix
+        n = len(featTrain);    # cols in dist matrix
+        
+        DTW = [ [0.0] * n for i in range(m)];
+
+        # Initialize first row and column to all infinities
+        for i in range(1,m):
+            DTW[i][0] = float("inf")
+        for j in range(1,n):
+            DTW[0][j] = float("inf")
+
+        # Find minimum cost path 
+        # s.t. D[i][j] = cost(i,j) + min(upper-left, up, left)
+        for i in range(1,m):
+            for j in range(1,n):
+                match_cost = distance.euclidean(featTest[i], featTrain[j])
+                DTW[i][j] = match_cost + min(DTW[i-1][j-1], DTW[i-1][j], DTW[i][j-1])
+
+        return DTW[-1][-1]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="A speech recognition program using dynamic time warping.")
@@ -44,6 +108,7 @@ if __name__ == "__main__":
     training_folder = args.folder + '/train'
     testing_folder = args.folder + '/test'
 
-    train_data(training_folder)
-    accuracy = test_data(testing_folder)
+    d = dtw(training_folder, testing_folder)
+    learned_labels = d.train_data()
+    accuracy = d.test_data(learned_labels)
     print "The accuracy on the isolet data is", '{:.2%}'.format(accuracy)
