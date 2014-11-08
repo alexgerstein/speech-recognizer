@@ -51,7 +51,6 @@ class SpeechRecognizer:
         '''
         data_labels = {}
         for test_key in self.test_set.keys():
-            label = test_key.split('-')[1][0]
             print test_key
             distances = []
             
@@ -109,7 +108,9 @@ class SpeechRecognizer:
         return DTW[-1][-1]
 
     def _get_majority(self, distances):
-        
+        '''
+        Gets majority vote by label. Chooses smallest value if no majority.
+        '''
         sorted_dists = sorted(distances, key=lambda x: x[1])
         labels, values = zip(*sorted_dists[:KNN]) 
         labels = map(lambda x: x.split('-')[1][0], labels)
