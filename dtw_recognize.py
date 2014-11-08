@@ -33,6 +33,7 @@ Goal: accuracy = 73.08%
 import argparse
 import glob
 from scipy.spatial import distance
+from collections import Counter
 
 MFC_TAG = ".mfc"
 KNN = 3
@@ -51,18 +52,14 @@ class SpeechRecognizer:
         data_labels = {}
         for test_key in self.test_set.keys():
             label = test_key.split('-')[1][0]
-            print test_key, label
+            print test_key
             distances = []
             
             for train_key in self.train_set.keys():
                 dtw = self._dtw(self.test_set[test_key], self.train_set[train_key])
                 distances.append( (train_key, dtw) )
 
-            distances = sorted(distances, key=lambda x: x[1])
-            labels, _ = zip(*distances[:KNN]) 
-            majority = max(map(lambda x: x.split('-')[1][0], labels))
-            data_labels[test_key] = majority
-            print "--> vote:", majority
+            data_labels[test_key] = self._get_majority(distances)
         
         return data_labels
 
@@ -80,7 +77,6 @@ class SpeechRecognizer:
         '''
         data_set = {}
         for mfc_file in glob.glob(folder + "/*" + MFC_TAG):
-            label = mfc_file.split('-')[1][0]
             with open(mfc_file, 'r') as mf:
                 data_set[mfc_file] = []
                 for line in mf:
@@ -105,12 +101,25 @@ class SpeechRecognizer:
 
         # Find minimum cost path 
         # s.t. D[i][j] = cost(i,j) + min(upper-left, up, left)
-        costs = distance.cdist(featTest, featTrain)
+        costs = distance.cdist(featTest, featTrain) # matrix of euclidian dists
         for i in range(1,m):
             for j in range(1,n):
                 DTW[i][j] = costs[i][j] + min(DTW[i-1][j-1], DTW[i-1][j], DTW[i][j-1])
 
         return DTW[-1][-1]
+
+    def _get_majority(self, distances):
+        
+        sorted_dists = sorted(distances, key=lambda x: x[1])
+        labels, values = zip(*sorted_dists[:KNN]) 
+        labels = map(lambda x: x.split('-')[1][0], labels)
+        
+        if (labels[0] != labels[1] != labels[2] != labels[0]):
+            majority = labels[0]
+        else:
+            majority = Counter(labels).most_common(1)[0][0]
+
+        return majority
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="A speech recognition program using dynamic time warping.")
