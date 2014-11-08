@@ -1,4 +1,8 @@
 """
+CS 73 Computational Linguistics
+Assignment 6 - Speech Recognition
+Authors: Alex Gerstein, Scott Gladstone
+
 We will use a portion of the ISOLET corpus, 
 consisting of recordings of isolated letters (A-Z) 
 by different speakers with different accents. 
@@ -9,7 +13,7 @@ A-Z). MFCCs have been pre-computed over frames of
 represents the cepstral coefficients from one time 
 frame. The filenames are of the form "speaker-letter1-t.mfc".
 
-Your task is to implement a procedure to infer 
+This program implements a procedure to infer 
 which letter is being spoken in unseen speech 
 recording, by using k-nearest-neighbors to match 
 the input speech recording against each training 
@@ -17,29 +21,33 @@ recording, and hypothesizing the majority label
 of the k nearest training examples. The distance 
 between pairs of recordings is computed with DTW.
 
-Write a program named dtw_recognize.py that reads
-the training and testing MFCC files,
+The program reads the training and testing MFCC files,
 recognizes which letter is being said by each 
 of the testing files using kNN (with k=3) and 
 dynamic time warping, and prints an accuracy 
 score for the recognition.
+
+Goal: accuracy = 73.08%
 """
 
 import argparse
 import glob
 from scipy.spatial import distance
 
-
 MFC_TAG = ".mfc"
-WAV_TAG = ".wav"
 KNN = 3
 
-class dtw:
+class SpeechRecognizer:
+
     def __init__(self, train_folder, test_folder):
         self.train_set = self._vectorize_data(train_folder)
         self.test_set = self._vectorize_data(test_folder)
 
     def train_data(self):
+        '''
+        Trains vectorized data using a kNN classifier with majority
+        voting and Dynamic Time Warping (DTW) for feature distances
+        '''
         data_labels = {}
         for test_key in self.test_set.keys():
             label = test_key.split('-')[1][0]
@@ -66,6 +74,10 @@ class dtw:
         return 1.0 * count / len(keySet)
 
     def _vectorize_data(self, folder):
+        '''
+        Converts data text files in matrices of feature vectors 
+        indexable in a dictionary by text filename
+        '''
         data_set = {}
         for mfc_file in glob.glob(folder + "/*" + MFC_TAG):
             label = mfc_file.split('-')[1][0]
@@ -108,7 +120,7 @@ if __name__ == "__main__":
     training_folder = args.folder + '/train'
     testing_folder = args.folder + '/test'
 
-    d = dtw(training_folder, testing_folder)
-    learned_labels = d.train_data()
-    accuracy = d.test_data(learned_labels)
+    sr = SpeechRecognizer(training_folder, testing_folder)
+    learned_labels = sr.train_data()
+    accuracy = sr.test_data(learned_labels)
     print "The accuracy on the isolet data is", '{:.2%}'.format(accuracy)
