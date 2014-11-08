@@ -105,10 +105,10 @@ class SpeechRecognizer:
 
         # Find minimum cost path 
         # s.t. D[i][j] = cost(i,j) + min(upper-left, up, left)
+        costs = distance.cdist(featTest, featTrain)
         for i in range(1,m):
             for j in range(1,n):
-                match_cost = distance.euclidean(featTest[i], featTrain[j])
-                DTW[i][j] = match_cost + min(DTW[i-1][j-1], DTW[i-1][j], DTW[i][j-1])
+                DTW[i][j] = costs[i][j] + min(DTW[i-1][j-1], DTW[i-1][j], DTW[i][j-1])
 
         return DTW[-1][-1]
 
