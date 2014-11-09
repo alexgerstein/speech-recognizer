@@ -38,6 +38,7 @@ from collections import Counter
 MFC_TAG = ".mfc"
 KNN = 3
 
+
 class SpeechRecognizer:
 
     def __init__(self, train_folder, test_folder):
@@ -45,10 +46,10 @@ class SpeechRecognizer:
         self.test_set = self._vectorize_data(test_folder)
 
     def train_data(self):
-        '''
+        """
         Trains vectorized data using a kNN classifier with majority
         voting and Dynamic Time Warping (DTW) for feature distances
-        '''
+        """
         data_labels = {}
         for test_key, test_vector in self.test_set.iteritems():
             print test_key
@@ -56,24 +57,24 @@ class SpeechRecognizer:
             
             for train_key, train_vector in self.train_set.iteritems():
                 dtw = self._dtw(test_vector, train_vector)
-                distances.append( (train_key, dtw) )
+                distances.append((train_key, dtw))
 
             data_labels[test_key] = self._get_majority(distances)
         
         return data_labels
 
-    def test_data(self, learned_labels):
-        keySet = learned_labels.keys()
+    def test_data(self, labels):
+        key_set = labels.keys()
         count = 0
-        for key in keySet:
-            count += (learned_labels[key] == key.split('-')[1][0])
-        return 1.0 * count / len(keySet)
+        for key in key_set:
+            count += (labels[key] == key.split('-')[1][0])
+        return 1.0 * count / len(key_set)
 
     def _vectorize_data(self, folder):
-        '''
+        """
         Converts data text files in matrices of feature vectors 
-        indexable in a dictionary by text filename
-        '''
+        index-able in a dictionary by text filename
+        """
         data_set = {}
         for mfc_file in glob.glob(folder + "/*" + MFC_TAG):
             with open(mfc_file, 'r') as mf:
@@ -83,38 +84,38 @@ class SpeechRecognizer:
                     data_set[mfc_file].append(line)
         return data_set
 
-    def _dtw(self, featTest, featTrain):
-        '''
+    def _dtw(self, feat_test, feat_train):
+        """
         Dynamic Time Warping (DTW): edit distance between speech feature vectors
-        '''
-        m = len(featTest) + 1;     # rows in distance matrix
-        n = len(featTrain) + 1;    # cols in dist matrix
+        """
+        m = len(feat_test) + 1      # rows in distance matrix
+        n = len(feat_train) + 1     # cols in dist matrix
         
-        DTW = [ [0.0] * n for i in range(m)];
+        dtw = [[0.0] * n for i in range(m)]
 
         # Initialize first row and column to all infinities
-        for i in range(1,m):
-            DTW[i][0] = float("inf")
-        for j in range(1,n):
-            DTW[0][j] = float("inf")
+        for i in range(1, m):
+            dtw[i][0] = float("inf")
+        for j in range(1, n):
+            dtw[0][j] = float("inf")
 
         # Find minimum cost path 
         # s.t. D[i][j] = cost(i,j) + min(upper-left, up, left)
-        costs = distance.cdist(featTest, featTrain) # matrix of euclidian dists
-        for i in range(1,m):
-            for j in range(1,n):
-                DTW[i][j] = costs[i-1][j-1] + min(DTW[i-1][j-1], DTW[i-1][j], DTW[i][j-1])
-        return DTW[-1][-1]
+        costs = distance.cdist(feat_test, feat_train)   # matrix of euclidean dists
+        for i in range(1, m):
+            for j in range(1, n):
+                dtw[i][j] = costs[i-1][j-1] + min(dtw[i-1][j-1], dtw[i-1][j], dtw[i][j-1])
+        return dtw[-1][-1]
 
     def _get_majority(self, distances):
-        '''
+        """
         Gets majority vote by label. Chooses smallest value if no majority.
-        '''
+        """
         sorted_dists = sorted(distances, key=lambda x: x[1])
         labels = [dist[0] for dist in sorted_dists[:KNN]]
         labels = map(lambda x: x.split('-')[1][0], labels)
         
-        if (labels[0] != labels[1] != labels[2] != labels[0]):
+        if labels[0] != labels[1] != labels[2] != labels[0]:
             majority = labels[0]
         else:
             majority = Counter(labels).most_common(1)[0][0]
