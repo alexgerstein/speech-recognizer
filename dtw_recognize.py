@@ -87,8 +87,8 @@ class SpeechRecognizer:
         '''
         Dynamic Time Warping (DTW): edit distance between speech feature vectors
         '''
-        m = len(featTest);     # rows in distance matrix
-        n = len(featTrain);    # cols in dist matrix
+        m = len(featTest)+1;     # rows in distance matrix
+        n = len(featTrain)+1;    # cols in dist matrix
         
         DTW = [ [0.0] * n for i in range(m)];
 
@@ -103,8 +103,7 @@ class SpeechRecognizer:
         costs = distance.cdist(featTest, featTrain) # matrix of euclidian dists
         for i in range(1,m):
             for j in range(1,n):
-                DTW[i][j] = costs[i][j] + min(DTW[i-1][j-1], DTW[i-1][j], DTW[i][j-1])
-
+                DTW[i][j] = costs[i-1][j-1] + min(DTW[i-1][j-1], DTW[i-1][j], DTW[i][j-1])
         return DTW[-1][-1]
 
     def _get_majority(self, distances):
