@@ -22,7 +22,4 @@ if __name__ == "__main__":
         output_filename = training_file.replace(AUDIO_TAG, MFCC_TAG)
         with open(output_filename, 'w') as outfile:
             for vector in mfcc_data:
-                for dist in vector:
-                    outfile.write(str(dist) + " ")
-
-                outfile.write("\n")
+                outfile.write(" ".join(map(str, vector)) + "\n")
