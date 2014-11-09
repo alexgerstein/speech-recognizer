@@ -50,12 +50,12 @@ class SpeechRecognizer:
         voting and Dynamic Time Warping (DTW) for feature distances
         '''
         data_labels = {}
-        for test_key in self.test_set.keys():
+        for test_key, test_vector in self.test_set.iteritems():
             print test_key
             distances = []
             
-            for train_key in self.train_set.keys():
-                dtw = self._dtw(self.test_set[test_key], self.train_set[train_key])
+            for train_key, train_vector in self.train_set.iteritems():
+                dtw = self._dtw(test_vector, train_vector)
                 distances.append( (train_key, dtw) )
 
             data_labels[test_key] = self._get_majority(distances)
