@@ -79,7 +79,7 @@ class SpeechRecognizer:
             with open(mfc_file, 'r') as mf:
                 data_set[mfc_file] = []
                 for line in mf:
-                    line = map(lambda x: float(x), line.split())
+                    line = map(float, line.split())
                     data_set[mfc_file].append(line)
         return data_set
 
@@ -87,8 +87,8 @@ class SpeechRecognizer:
         '''
         Dynamic Time Warping (DTW): edit distance between speech feature vectors
         '''
-        m = len(featTest)+1;     # rows in distance matrix
-        n = len(featTrain)+1;    # cols in dist matrix
+        m = len(featTest) + 1;     # rows in distance matrix
+        n = len(featTrain) + 1;    # cols in dist matrix
         
         DTW = [ [0.0] * n for i in range(m)];
 
@@ -111,7 +111,7 @@ class SpeechRecognizer:
         Gets majority vote by label. Chooses smallest value if no majority.
         '''
         sorted_dists = sorted(distances, key=lambda x: x[1])
-        labels, values = zip(*sorted_dists[:KNN]) 
+        labels = [dist[0] for dist in sorted_dists[:KNN]]
         labels = map(lambda x: x.split('-')[1][0], labels)
         
         if (labels[0] != labels[1] != labels[2] != labels[0]):
