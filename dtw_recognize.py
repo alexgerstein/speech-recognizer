@@ -52,7 +52,7 @@ class SpeechRecognizer:
         """
         data_labels = {}
         for test_key, test_vector in self.test_set.iteritems():
-            print test_key
+            print "Training on:", test_key
             distances = []
             
             for train_key, train_vector in self.train_set.iteritems():
@@ -64,11 +64,11 @@ class SpeechRecognizer:
         return data_labels
 
     def test_data(self, labels):
-        key_set = labels.keys()
         count = 0
-        for key in key_set:
-            count += (labels[key] == key.split('-')[1][0])
-        return 1.0 * count / len(key_set)
+        for key, match in labels.iteritems():
+            count += (match == key.split('-')[1].strip("0123456789"))
+        print labels
+        return 1.0 * count / len(labels)
 
     def _vectorize_data(self, folder):
         """
@@ -113,7 +113,7 @@ class SpeechRecognizer:
         """
         sorted_dists = sorted(distances, key=lambda x: x[1])
         labels = [dist[0] for dist in sorted_dists[:KNN]]
-        labels = map(lambda x: x.split('-')[1][0], labels)
+        labels = map(lambda x: x.split('-')[1].strip("0123456789"), labels)
         
         if labels[0] != labels[1] != labels[2] != labels[0]:
             majority = labels[0]
@@ -133,4 +133,4 @@ if __name__ == "__main__":
     sr = SpeechRecognizer(training_folder, testing_folder)
     learned_labels = sr.train_data()
     accuracy = sr.test_data(learned_labels)
-    print "The accuracy on the isolet data is", '{:.2%}'.format(accuracy)
+    print "The accuracy on the data is", '{:.2%}'.format(accuracy)
