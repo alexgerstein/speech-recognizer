@@ -27,7 +27,17 @@ of the testing files using kNN (with k=3) and
 dynamic time warping, and prints an accuracy 
 score for the recognition.
 
-Best accuracy: 75.00%
+OBSERVATIONS:
+To be honest, the speech recognizer worked much better than I 
+anticipated. For words with less variance in how they 
+could be pronounced, the program worked very well. However 
+for "Delete," Scott and I had different ways of saying it. 
+I emphasized the last syllable more than he did. For this 
+reason, the computer had a hard time determining the word.
+It also probably helped that all recordings were done on the
+same machine and in the same environment. This led to less
+variability in ambiance and sound quality.
+
 """
 
 import argparse
@@ -66,6 +76,7 @@ class SpeechRecognizer:
         count = 0
         for key, match in labels.iteritems():
             count += (match == key.split('-')[1].strip("0123456789"))
+        print labels
         return 1.0 * count / len(labels)
 
     def _vectorize_data(self, folder):
