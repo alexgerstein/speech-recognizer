@@ -27,7 +27,7 @@ of the testing files using kNN (with k=3) and
 dynamic time warping, and prints an accuracy 
 score for the recognition.
 
-Goal: accuracy = 73.08%
+Best accuracy: 75.00%
 """
 
 import argparse
@@ -52,7 +52,6 @@ class SpeechRecognizer:
         """
         data_labels = {}
         for test_key, test_vector in self.test_set.iteritems():
-            print "Training on:", test_key
             distances = []
             
             for train_key, train_vector in self.train_set.iteritems():
@@ -67,7 +66,6 @@ class SpeechRecognizer:
         count = 0
         for key, match in labels.iteritems():
             count += (match == key.split('-')[1].strip("0123456789"))
-        print labels
         return 1.0 * count / len(labels)
 
     def _vectorize_data(self, folder):
